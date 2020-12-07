@@ -97,7 +97,8 @@
 			// canvasCtx.lineWidth = 1;
 			// canvasCtx.strokeStyle = 'purle';
 
-			drawData.sliceWidth = Math.floor(canvas.width * 1.0 / bufferLength);
+			//低音部分经常没有，所以低音部分的50条低频数据不要显示在画布内，可以加宽每条
+			drawData.sliceWidth = Math.floor(canvas.width * 1.0 / (bufferLength - 50));
 
 			drawData.gradient = canvasCtx.createLinearGradient(0, canvas.height, canvas.width, 0);
 			drawData.gradient.addColorStop(0, '#ff4601');
@@ -119,22 +120,20 @@
 			window.requestAnimationFrame(draw);
 			//console.log('dt:', dt); 
 			// 40ms 内不更新
-			if(dt - drawData.time < 40){
-				return;
-			}else{
-				drawData.time = dt;
-			}
-			preEveryDraw();
+			if(dt - drawData.time < 40) return;
+			drawData.time = dt;
 
-			let x = 0;
-			//数组中数据是由高频到低频 因此反序绘制，从左到右 频率由低到高
-			for (let i = bufferLength - 1; i > -1; i--) {
+			preEveryDraw();
+			let x = canvas.width - drawData.sliceWidth;
+			//数组中数据是由高频到低频 因此从右往左绘制，让结果从左到右 频率由低到高
+			for (let i = 0; i < bufferLength; i++) {
 				canvasCtx.fillStyle = drawData.gradient;
 				let v = frequencyData[i] / 256.0;
-				let y = v * canvas.height;
+				//整体缩小高度0.8
+				let y = v * canvas.height * 0.8;
 				canvasCtx.fillRect(x, canvas.height - y, drawData.sliceWidth, y);
 
-				x += drawData.sliceWidth + 1;
+				x -= drawData.sliceWidth + 1;
 			}
 		};
 
